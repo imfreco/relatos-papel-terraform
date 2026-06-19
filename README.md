@@ -40,6 +40,26 @@ Environment = academy
 ManagedBy   = terraform
 ```
 
+## Estructura del proyecto
+
+El root module funciona como orquestador: define provider, variables, tags comunes, outputs y la composición de módulos. Cada módulo interno tiene una responsabilidad principal:
+
+```text
+.
+├── main.tf                      # Composición de módulos
+├── versions.tf                  # Versión de Terraform y providers
+├── providers.tf                 # Configuración del provider AWS
+├── locals.tf                    # Tags comunes
+├── variables.tf                 # Variables públicas del proyecto
+├── outputs.tf                   # Outputs públicos del proyecto
+└── modules/
+    ├── network/                 # VPC, subnets, gateways y rutas
+    ├── security/                # Security Groups por capa
+    ├── load_balancer/           # ALB, Target Groups, listener y reglas
+    ├── compute/                 # AMI, Launch Templates, ASG y user data
+    └── database/                # DB subnet group y RDS PostgreSQL
+```
+
 ## Requisitos
 
 - Terraform `>= 1.6.0`
@@ -122,7 +142,7 @@ http://<alb_dns>/health
 
 ### Frontend
 
-`user_data_frontend.sh` instala Nginx, `wget` y `unzip`, descarga el ZIP del frontend desde Google Drive usando `frontend_google_drive_file_id`, busca automáticamente una carpeta `dist`, copia su contenido a `/usr/share/nginx/html`, crea `/usr/share/nginx/html/health` y configura Nginx para servir una React SPA.
+`modules/compute/templates/user_data_frontend.sh` instala Nginx, `wget` y `unzip`, descarga el ZIP del frontend desde Google Drive usando `frontend_google_drive_file_id`, busca automáticamente una carpeta `dist`, copia su contenido a `/usr/share/nginx/html`, crea `/usr/share/nginx/html/health` y configura Nginx para servir una React SPA.
 
 Logs:
 
@@ -132,7 +152,7 @@ Logs:
 
 ### Backend
 
-`user_data_backend.sh` instala Python 3, crea una API HTTP simple escuchando en `0.0.0.0:8080` y registra el servicio systemd `relatos-backend.service`.
+`modules/compute/templates/user_data_backend.sh` instala Python 3, crea una API HTTP simple escuchando en `0.0.0.0:8080` y registra el servicio systemd `relatos-backend.service`.
 
 Endpoints:
 
